@@ -1,4 +1,14 @@
 # Computer-Assignment-eigenvalues-and-eigenvector
+
+Steps:
+Solve the Schrödinger equation using the Numerov method for a given energy 
+𝐸
+E.
+Adjust the energy 
+𝐸
+E based on the mismatch between the wavefunction at the boundaries.
+Repeat the process until the mismatch is below a set tolerance, indicating that the correct eigenvalue has been found.
+
 import numpy as np
 import matplotlib.pyplot as plt
 
