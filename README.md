@@ -1,1 +1,101 @@
 # Computer-Assignment-eigenvalues-and-eigenvector
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Constants
+n = 2              # Quantum number
+a = 1              # Parameter (adjust as needed)
+lamda = 4          # Lambda (potential parameter)
+hbar = 1.0         # Reduced Planck's constant (normalized)
+m = 1.0            # Mass of the particle (normalized)
+xL = -3.0         # Minimum x value
+xR = 3.0          # Maximum x value
+num_points = 1000   # Number of grid points
+tol = 1e-6         # Tolerance for the energy search
+max_iter = 100     # Maximum iterations for secant method
+
+# Energy guess using given equation (for secant method)
+E_guess = ((hbar*a)**2 / 2*m)*(lamda*(lamda-1)/2 - (lamda - 1 - n)**2)
+print ("Energy when n = 2 is ", E_guess)
+
+# Step size
+h = (xR - xL) / num_points
+
+# Potential function (as per your problem)
+def potential(x):
+    return ((hbar * a)**2 / (2 * m)) * lamda * (lamda - 1) * (0.5 - 1 / np.cosh(a * x)**2)
+
+# Numerov method to solve the Schrödinger equation
+def numerov(x, E, V):
+    # Initialize wavefunction array
+    psi = np.zeros(len(x))
+    
+    # Boundary conditions: psi(0) = 0 and psi(dx) = 0 (for bound states)
+    psi[0] = 0
+    psi[1] = 1e-5  # A small value at the first point
+    
+    # Precompute k(x) = 2m/hbar^2 * (E - V(x))
+    k = (2 * m / hbar**2) * (E - V(x))
+    
+    # Apply the Numerov method
+    for i in range(1, len(x) - 1):
+        psi[i + 1] = (2 * psi[i] * (1 - (5 * k[i] * h**2 / 12))) - (psi[i - 1] * (1 + (k[i - 1] * h**2 / 12))) / (1 + (k[i + 1] * h**2 / 12))
+    
+    return psi
+
+# Function to calculate the mismatch at the boundaries (for the secant method)
+def diff(E, x):
+    psi = numerov(x, E, potential)
+    
+    # Check the mismatch at the boundary
+    f0 = (psi[-1] + psi[0])  # For bound state, psi should be 0 at both boundaries
+    return f0
+
+# Secant method to find the eigenvalue
+def secant_method(E1, E2, tol, max_iter, x):
+    f1 = diff(E1, x)
+    f2 = diff(E2, x)
+    
+    iter_count = 0
+    while abs(f2) > tol and iter_count < max_iter:
+        # Secant method update
+        E_new = E2 - f2 * (E2 - E1) / (f2 - f1)
+        
+        # Update previous values
+        E1, E2 = E2, E_new
+        f1, f2 = f2, diff(E2, x)
+        
+        iter_count += 1
+        
+    return E2
+
+# Set up the grid for solving the Schrödinger equation
+x = np.linspace(xL, xR, num_points)
+
+# Initial guesses for the energy using the secant method
+E1 = E_guess
+E2 = E_guess + 0.1  # A small variation
+
+# Find the eigenvalue using secant method
+E_eigenvalue = secant_method(E1, E2, tol, max_iter, x)
+
+# Print the eigenvalue
+print("Calculated eigenvalue:", E_eigenvalue)
+
+# Solve the Schrödinger equation with the found eigenvalue
+psi = numerov(x, E_eigenvalue, potential)
+
+# Normalize the wavefunction
+psi /= np.sqrt(np.trapz(psi**2, x))  # Normalize using trapezoidal integration
+
+# Plot the potential and wavefunction
+plt.figure(figsize=(10, 6))
+plt.axhline(E_eigenvalue, linestyle='--', label=f"Eigenvalue (E={E_eigenvalue:.2f})", color='blue')
+plt.plot(x, potential(x), label="Potential V(x)", color="orange")
+plt.plot(x, psi, label="Wavefunction", color="magenta")
+plt.title(f"Wavefunction and Potential for Eigenvalue")
+plt.xlabel("x")
+plt.ylabel("Wavefunction / Potential")
+plt.legend()
+plt.grid(True)
+plt.show()
