@@ -1,0 +1,5 @@
+Steps:
+1. Solve the Schroedinger equation using Numerov method for a given energy, E.
+2. Adjust the energy, E based on the mismatch between the wavefunction at the boundaries.
+3. Repeat the process until the mismatch is below the tolerance.
+4. Correct eigenvalue has been found.
